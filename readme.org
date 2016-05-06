@@ -1,1 +1,25 @@
 * logstash elasticsearch kibana 日志分析系统 docker 镜像构建
+
+*  生成 包含 logstash elasticsearch kibana 的 docker 镜像
+  直接本目录下
+  #+BEGIN_SRC sh
+  sudo make
+  #+END_SRC
+  或
+  #+BEGIN_SRC sh
+   docker build -t najaplus/logstash:latest  .
+  #+END_SRC
+* 运行镜像
+  #+BEGIN_SRC sh
+  sudo  docker run -t -i najaplus/logstash bash
+  #+END_SRC
+* 测试logstash 是否成功安装
+  在镜像中运行
+  #+BEGIN_SRC sh
+  logstash -e 'input { stdin { } } output { stdout {} }'
+  #+END_SRC
+  此时会进入交互式提示界面 ，然后输入任意字符如 "hello" 会有如下提示
+  #+BEGIN_QUOTE
+  2016-05-06T17:30:17.219Z 40b8994c31cb hello
+  #+END_QUOTE
+
