@@ -14,6 +14,11 @@
   sudo  docker run -t -i najaplus/logstash bash
   #+END_SRC
 ** logstash
+   logstash 主要功能，收集与解析数据，
+   从 日志文件或redis 队列中解析出日志数据，经过logstash 一些filter plugin
+   解析转换为格式化的内容(json) ,存储到某个地方( 可以是redis ,file,elasticseatch),
+   以便进行数据分析与统计
+
 *** 测试logstash 是否成功安装
   在镜像中运行
   #+BEGIN_SRC sh
@@ -28,6 +33,207 @@
    https://www.elastic.co/guide/en/logstash/current/getting-started-with-logstash.html
 *** logstash demo
     logstash_demo 目录下有几个demo
-   logstash -f logstash1.conf
-   logstash -f logstash1.conf  --auto-reload
+    #+BEGIN_SRC sh
+      logstash -f logstash1.conf
+      logstash -f logstash1.conf  --auto-reload
+    #+END_SRC
 
+** Elasticsearch
+   主要功能， 数据的存储与检索，基于json 格式存储，
+   基于Lucene
+
+*** elasticsearch 的几个主要概念
+
+**** Cluster 集群
+     集群有个名字， 防止不同集群间混淆
+     elasticsearch --cluster.name my_cluster_name --node.name my_node_name
+     默认名称 elasticsearch
+
+**** Node 节点
+     一个cluster 下分多个node
+     elasticsearch --cluster.name my_cluster_name --node.name my_node_name
+     默认名称 elasticsearch
+     如果只启动一个node 相当于
+     elasticsearch  --cluster.name elasticsearch --node.name elasticsearch
+
+**** Index
+     An index is a collection of documents that have somewhat similar characteristics.
+     一些具有共性的documents 的集合，
+     比如 顾客信息存为一个index ,产品信息存为另一个index
+     可以认为 一个index 就是一个类别,比如我把游戏1的信息存到index1上 游戏2的信息存到index2上
+     index 有名字
+     一个cluster 可以有任意多个index
+
+**** Type
+     Index 下可以定义多个Type
+     a type is defined for documents that have a set of common fields.
+     type 可以认为是编译语言里的struct/class
+
+**** Document
+     docuemnt 存储具体和信息，如果Type 当成java里的Class ,则Document 可以认为是这个Class 的实例
+     在 elasticsearch中它实际是一个json
+
+**** Shards&Replication
+     架构层面上的东西 ，
+     可以进行分片，及主从 这个可以参考mysql 的数据库分片 与主从
+     一个index 内的数据量可能极大，可以将index 分成多片(称为shard)
+     当定义index 时 ，可以指定将此index 分成n个shards
+
+     Each shard is in itself a fully-functional and independent
+     "index" that can be hosted on any node in the cluster.
+     可以认为index 与shards是逻辑上的， 而 cluster 与node 上架构上的。
+     一个index 分为多个shards(s1,s2,s3) ，一个cluster 分为多个node(n1,n2,n3)
+     将shard s1,s2,s3 分别放到n1,n2,n3节点上
+
+     而Replication 可以认为是从库，
+     存在的意义，
+     1. 备份，及当某个node 挂了 可以failover, 以保证 高可用性(hight available)
+     2. 查询可以在从库上进行
+
+        默认情况下 一个index 有5个shard, 每个shard 有一个 replica shards,即共有10个shards
+        通常情况下 replica shard 肯定跟primary shard 不在同一个节点上(这样从库还真正有意义)
+
+
+*** 启动
+    elasticsearch 基于Lucene,而Lucene 使用java 编写，所以java jdk 是安装所必须的
+
+    #+BEGIN_SRC sh
+    elasticsearch
+    或
+    elasticsearch --cluster.name my_cluster_name --node.name my_node_name
+    #+END_SRC
+    启动之后9200端口会监听http 请求
+
+*** 检查节点状态
+    #+BEGIN_SRC sh
+      curl 'localhost:9200/_cat/health?v'
+    #+END_SRC
+    #+BEGIN_QUOTE
+        deployer@iZ94badqop7Z logstash_demo/demo1 (master) $ curl 'localhost:9200/_cat/health?v'
+        epoch      timestamp cluster       status node.total node.data shards pri relo init unassign pending_tasks max_task_wait_time active_shards_percent
+        1462637474 00:11:14  elasticsearch yellow          1         1      5   5    0    0        5             0                  -                 50.0%
+    #+END_QUOTE
+
+*** 获取node 列表
+    #+BEGIN_SRC sh
+    curl 'localhost:9200/_cat/nodes?v'
+    #+END_SRC
+    #+BEGIN_QUOTE
+        deployer@iZ94badqop7Z logstash_demo/demo1 $
+        host         ip           heap.percent ram.percent load node.role master name
+        120.24.77.58 120.24.77.58            7          92 0.17 d         *      zjh
+    #+END_QUOTE
+
+*** 查看集群上有哪个index
+    #+BEGIN_SRC sh
+    curl 'localhost:9200/_cat/indices?v
+    #+END_SRC
+    #+BEGIN_QUOTE
+    health status index               pri rep docs.count docs.deleted store.size pri.store.size
+    yellow open   logstash-2016.05.07   5   1          6            0     17.3kb         17.3kb
+    #+END_QUOTE
+    可以看到index 的名字， primary个数 ，replica个数 ,docuemnts数量，
+
+*** 创建一个index
+    #+BEGIN_SRC sh
+    curl -XPUT 'localhost:9200/customer?pretty'
+    #+END_SRC
+    #+BEGIN_QUOTE
+        {
+        "acknowledged" : true
+        }
+    #+END_QUOTE
+
+*** 删除某个index
+    #+BEGIN_SRC sh
+    curl -XDELETE 'localhost:9200/customer?pretty'
+    #+END_SRC
+
+*** 创建某个Type 的Documents
+    这里在index:customer上创建了一个type 为 external id=1的document
+    如果id=1的已经存在，则会替换之
+    #+BEGIN_SRC sh
+        curl -XPUT 'localhost:9200/customer/external/1?pretty' -d '
+            {
+            "name": "John Doe"
+            }'
+    #+END_SRC
+    #+BEGIN_QUOTE
+    {
+        "_index" : "customer",
+        "_type" : "external",
+        "_id" : "1",
+        "_version" : 1,
+        "_shards" : {
+            "total" : 2,
+            "successful" : 1,
+            "failed" : 0
+        },
+        "created" : true
+    }
+    #+END_QUOTE
+    实际情况上 ，在创建document 时， 不必手动去创建相应的index,执行上述命令， 如果没有index:customer,则会自动创建
+
+        curl -XPUT 'localhost:9200/custome2r/external/1?pretty' -d '
+            {
+            "name": "John Doe"
+            }'
+
+*** 查询某个document
+    #+BEGIN_SRC sh
+    curl -XGET 'localhost:9200/customer/external/1?pretty'
+    #+END_SRC
+    #+BEGIN_QUOTE
+    {
+        "_index" : "customer",
+        "_type" : "external",
+        "_id" : "1",
+        "_version" : 1,
+        "found" : true,
+        "_source" : {
+            "name" : "John Doe"
+        }
+    }
+    #+END_QUOTE
+
+*** update document
+    update 实际是先删除后增加
+    #+BEGIN_SRC sh
+      curl -XPOST 'localhost:9200/customer/external/1/_update?pretty' -d '
+      {
+        "doc": { "name": "Jane Doe","age":11 }
+      }'
+    #+END_SRC
+    通过script 修改age 的值  +5
+    script 文档 https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-scripting.html
+    #+BEGIN_SRC sh
+      curl -XPOST 'localhost:9200/customer/external/1/_update?pretty' -d '
+      {
+        "script" : "ctx._source.age += 5"
+      }'
+    #+END_SRC
+    目前的版本，script 操作只能会对一个docuemnt ,以后或许会支持类似于sql update 的操作 ，同时修改多个
+
+*** delete document
+    #+BEGIN_SRC sh
+    curl -XDELETE 'localhost:9200/customer/external/2?pretty'
+    #+END_SRC
+
+*** 批量操作
+    同时创建id=1,2的 type:external
+    #+BEGIN_SRC sh
+    curl -XPOST 'localhost:9200/customer/external/_bulk?pretty' -d '
+        {"index":{"_id":"1"}}
+        {"name": "John Doe" }
+        {"index":{"_id":"2"}}
+        {"name": "Jane Doe" }
+        '
+    #+END_SRC
+    修改一个， 同时删除另一个
+    #+BEGIN_SRC sh
+    curl -XPOST 'localhost:9200/customer/external/_bulk?pretty' -d '
+    {"update":{"_id":"1"}}
+    {"doc": { "name": "John Doe becomes Jane Doe" } }
+    {"delete":{"_id":"2"}}
+    '
+    #+END_SRC
