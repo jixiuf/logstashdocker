@@ -13,7 +13,8 @@
   #+BEGIN_SRC sh
   sudo  docker run -t -i najaplus/logstash bash
   #+END_SRC
-** 测试logstash 是否成功安装
+** logstash
+*** 测试logstash 是否成功安装
   在镜像中运行
   #+BEGIN_SRC sh
   logstash -e 'input { stdin { } } output { stdout {} }'
@@ -23,6 +24,10 @@
   2016-05-06T17:30:17.219Z 40b8994c31cb hello
   #+END_QUOTE
 
-** logstash 官网 快速入门
+*** logstash 官网 快速入门
    https://www.elastic.co/guide/en/logstash/current/getting-started-with-logstash.html
-** logstash demo
+*** logstash demo
+    logstash_demo 目录下有几个demo
+   logstash -f logstash1.conf
+   logstash -f logstash1.conf  --auto-reload
+
