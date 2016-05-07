@@ -1,6 +1,6 @@
 * logstash elasticsearch kibana 日志分析系统 docker 镜像构建
-
-*  生成 包含 logstash elasticsearch kibana 的 docker 镜像
+** 本库地址 https://github.com/jixiuf/logstashdocker
+**  生成 包含 logstash elasticsearch kibana 的 docker 镜像
   直接本目录下
   #+BEGIN_SRC sh
   sudo make
@@ -9,11 +9,11 @@
   #+BEGIN_SRC sh
    docker build -t najaplus/logstash:latest  .
   #+END_SRC
-* 运行镜像
+** 运行镜像
   #+BEGIN_SRC sh
   sudo  docker run -t -i najaplus/logstash bash
   #+END_SRC
-* 测试logstash 是否成功安装
+** 测试logstash 是否成功安装
   在镜像中运行
   #+BEGIN_SRC sh
   logstash -e 'input { stdin { } } output { stdout {} }'
@@ -23,3 +23,5 @@
   2016-05-06T17:30:17.219Z 40b8994c31cb hello
   #+END_QUOTE
 
+** logstash 官网 快速入门
+   https://www.elastic.co/guide/en/logstash/current/getting-started-with-logstash.html

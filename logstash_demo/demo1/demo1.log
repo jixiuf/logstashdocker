@@ -1,0 +1,2 @@
+logtype=assets_change,uin=144150665027526756,key=1,before=99990,after=100190,change=200,reason=sign,ip=192.168.1.1
+logtype=login,uin=144150665027526756,ip=192.168.1.1
