@@ -435,3 +435,66 @@
         }
       #+END_SRC
 
+***** bool 语法（must,must_not,should）
+      相当于 and not or
+
+      查 gender==M and age==32
+      #+BEGIN_SRC sh
+      curl -XPOST 'localhost:9200/bank/_search?pretty' -d '
+        {
+          "query": {
+            "bool": {
+                "must": [
+                        { "match": { "gender": "M" } },
+                        { "match": { "age": "32" } }
+                ]
+            }
+          }
+        }'
+      #+END_SRC
+      查 age==31 or age==32
+      #+BEGIN_SRC sh
+      curl -XPOST 'localhost:9200/bank/_search?pretty' -d '
+        {
+          "query": {
+            "bool": {
+                "should": [
+                        { "match": { "age": "31" } },
+                        { "match": { "age": "32" } }
+                ]
+            }
+          }
+        }'
+      #+END_SRC
+      查  (gender=M and age==32) and( balance!= 32838 and balance!= 18612 )
+      #+BEGIN_SRC sh
+      curl -XPOST 'localhost:9200/bank/_search?pretty' -d '
+        {
+          "query": {
+            "bool": {
+                "must": [
+                        { "match": { "gender": "M" } },
+                        { "match": { "age": "32" } }
+                ],
+                "must_not": [
+                        { "match": { "balance" : 32838} },
+                        { "match": { "balance" : 18612} }
+                ]
+            }
+          }
+        }'
+      #+END_SRC
+
+***** filter 结果集的过滤
+      # gender=M and (balance>=10 and balance<=20000)
+      #+BEGIN_SRC sh
+      curl -XPOST 'localhost:9200/bank/_search?pretty' -d '
+        {
+          "query": {
+            "bool": {
+                "must": [{ "match": { "gender": "M" } }],
+                "filter": {"range":{ "balance":{"gte":20000,"lte":10}}}
+            }
+            }
+        }'
+      #+END_SRC
