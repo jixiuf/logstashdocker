@@ -1,6 +1,14 @@
 #+OPTIONS:   H:2 num:nil toc:t \n:t @:t ::t |:t ^:nil -:t f:t *:t <:t
 * logstash elasticsearch kibana 日志分析系统 docker 镜像构建
 ** 本库地址 https://github.com/jixiuf/logstashdocker
+** 官方docker 镜像
+   https://hub.docker.com/_/logstash/
+   docker pull logstash
+   https://hub.docker.com/_/kibana/
+   docker pull kibana
+   https://hub.docker.com/_/elasticsearch/
+   docker pull elasticsearch
+
 **  生成 包含 logstash elasticsearch kibana 的 docker 镜像
    直接本目录下
    #+BEGIN_SRC sh
