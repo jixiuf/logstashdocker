@@ -400,6 +400,15 @@
         "_source":["account_number","balance"]
         }'
       #+END_SRC
+      match_phrase似乎跟match 是一样的(返回结果好像是一样的)
+      #+BEGIN_SRC sh
+        curl -XPOST 'localhost:9200/bank/_search?pretty' -d '
+        {
+        "query": { "match_phrase":{"account_number":37} },
+        "_source":["account_number","balance"]
+        }'
+      #+END_SRC
+
       #+BEGIN_SRC js
               {
           "took" : 33,
