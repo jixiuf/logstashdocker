@@ -1,3 +1,4 @@
+#+OPTIONS:   H:2 num:nil toc:t \n:t @:t ::t |:t ^:nil -:t f:t *:t <:t
 * logstash elasticsearch kibana 日志分析系统 docker 镜像构建
 ** 本库地址 https://github.com/jixiuf/logstashdocker
 **  生成 包含 logstash elasticsearch kibana 的 docker 镜像
@@ -46,28 +47,31 @@
 
 **** Cluster 集群
      集群有个名字， 防止不同集群间混淆
-     elasticsearch --cluster.name my_cluster_name --node.name my_node_name
+     #+BEGIN_SRC sh
+       elasticsearch --cluster.name my_cluster_name --node.name my_node_name
+     #+END_SRC
      默认名称 elasticsearch
 
 **** Node 节点
      一个cluster 下分多个node
-     elasticsearch --cluster.name my_cluster_name --node.name my_node_name
+     #+BEGIN_SRC sh
+       elasticsearch --cluster.name my_cluster_name --node.name my_node_name
+     #+END_SRC
      默认名称 elasticsearch
      如果只启动一个node 相当于
-     elasticsearch  --cluster.name elasticsearch --node.name elasticsearch
+     #+BEGIN_SRC sh
+       elasticsearch  --cluster.name elasticsearch --node.name elasticsearch
+     #+END_SRC
 
 **** Index
-     An index is a collection of documents that have somewhat similar characteristics.
-     一些具有共性的documents 的集合，
-     比如 顾客信息存为一个index ,产品信息存为另一个index
-     可以认为 一个index 就是一个类别,比如我把游戏1的信息存到index1上 游戏2的信息存到index2上
-     index 有名字
-     一个cluster 可以有任意多个index
+     一些具有共性的documents 的集合，可以认为 一个
+     index 就是一个类别,比如我把游戏1的信息存到index1上 游戏2的信息存
+     到index2上index 有名字一个cluster 可以有任意多个index
 
 **** Type
      Index 下可以定义多个Type
+     可以认为是编程语言里的struct/class
      a type is defined for documents that have a set of common fields.
-     type 可以认为是编译语言里的struct/class
 
 **** Document
      docuemnt 存储具体和信息，如果Type 当成java里的Class ,则Document 可以认为是这个Class 的实例
