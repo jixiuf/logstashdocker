@@ -260,10 +260,169 @@
      curl -XPOST 'localhost:9200/bank/account/_bulk?pretty' --data-binary "@account.json"
      #+END_SRC
      #+BEGIN_SRC sh
-     curl 'localhost:9200/_cat/indices?v'
+     curl 'localhost:9200/_cat/indices?v
      #+END_SRC
      #+BEGIN_SRC sh
           curl 'localhost:9200/_cat/indices?v'
           health index pri rep docs.count docs.deleted store.size pri.store.size
           yellow bank    5   1       1000            0    424.4kb        424.4kb
      #+END_SRC
+
+*** Search
+
+**** 查所有
+     #+BEGIN_SRC sh
+       # 两种方式， 一种通过参数 ，一种通过request body 发送json内容
+       curl 'localhost:9200/bank/_search?q=*&pretty'
+       #或
+       curl -XPOST 'localhost:9200/bank/_search?pretty' -d '
+        {
+        "query": { "match_all": {} }
+        }'
+     #+END_SRC
+     #+BEGIN_SRC js
+          {
+       "took" : 63,
+       "timed_out" : false,
+       "_shards" : {
+         "total" : 5,
+         "successful" : 5,
+         "failed" : 0
+       },
+       "hits" : {
+         "total" : 1000,
+         "max_score" : 1.0,
+         "hits" : [ {
+           "_index" : "bank",
+           "_type" : "account",
+           "_id" : "1",
+           "_score" : 1.0, "_source" : {"account_number":1,"balance":39225,"firstname":"Amber","lastname":"Duke","age":32,"gender":"M","address":"880 Holmes Lane","employer":"Pyrami","email":"amberduke@pyrami.com","city":"Brogan","state":"IL"}
+         }, {
+           "_index" : "bank",
+           "_type" : "account",
+           "_id" : "6",
+           "_score" : 1.0, "_source" : {"account_number":6,"balance":5686,"firstname":"Hattie","lastname":"Bond","age":36,"gender":"M","address":"671 Bristol Street","employer":"Netagy","email":"hattiebond@netagy.com","city":"Dante","state":"TN"}
+         }
+         ...
+         ]}}
+
+     #+END_SRC
+
+**** 查询语法
+     https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html
+***** size 指定返回多少个结果
+     #+BEGIN_SRC sh
+       curl -XPOST 'localhost:9200/bank/_search?pretty' -d '
+       {
+       "query": { "match_all": {} },
+        "size": 1
+       }'
+     #+END_SRC
+***** from and sort 返回结果集的 第3，4，5条
+      from 控制从哪条记录起始(0based)
+      sort：使用balance 降序排列
+      #+BEGIN_SRC sh
+        curl -XPOST 'localhost:9200/bank/_search?pretty' -d '
+        {
+        "query": { "match_all": {} },
+          "from":2,
+         "size": 3,
+          "sort": { "balance": { "order": "desc" } }
+        }'
+      #+END_SRC
+
+*****  只返回特定的字段 _source
+
+      #+BEGIN_SRC sh
+        curl -XPOST 'localhost:9200/bank/_search?pretty' -d '
+        {
+        "query": { "match_all": {} },
+          "from":2,
+         "size": 3,
+          "sort": { "balance": { "order": "desc" } },
+          "_source":["account_number","balance"]
+        }'
+      #+END_SRC
+      #+BEGIN_SRC js
+              {
+          "took" : 10,
+          "errors" : true,
+          "timed_out" : false,
+          "_shards" : {
+            "total" : 5,
+            "successful" : 5,
+            "failed" : 0
+          },
+          "hits" : {
+            "total" : 8,
+            "max_score" : null,
+            "hits" : [ {
+              "_index" : "bank",
+              "_type" : "account",
+              "_id" : "1",
+              "_score" : null,
+              "_source" : {
+                "account_number" : 1,
+                "balance" : 39225
+              },
+              "sort" : [ 39225 ]
+            }, {
+              "_index" : "bank",
+              "_type" : "account",
+              "_id" : "13",
+              "_score" : null,
+              "_source" : {
+                "account_number" : 13,
+                "balance" : 32838
+              },
+              "sort" : [ 32838 ]
+            }, {
+              "_index" : "bank",
+              "_type" : "account",
+              "_id" : "37",
+              "_score" : null,
+              "_source" : {
+                "account_number" : 37,
+                "balance" : 18612
+              },
+              "sort" : [ 18612 ]
+            } ]
+          }
+        }
+      #+END_SRC
+
+***** 根据字段查询选定条件的
+      查 account_number=37的
+      #+BEGIN_SRC sh
+        curl -XPOST 'localhost:9200/bank/_search?pretty' -d '
+        {
+        "query": { "match":{"account_number":37} },
+        "_source":["account_number","balance"]
+        }'
+      #+END_SRC
+      #+BEGIN_SRC js
+              {
+          "took" : 33,
+          "timed_out" : false,
+          "_shards" : {
+            "total" : 5,
+            "successful" : 5,
+            "failed" : 0
+          },
+          "hits" : {
+            "total" : 1,
+            "max_score" : 0.30685282,
+            "hits" : [ {
+              "_index" : "bank",
+              "_type" : "account",
+              "_id" : "37",
+              "_score" : 0.30685282,
+              "_source" : {
+                "account_number" : 37,
+                "balance" : 18612
+              }
+            } ]
+          }
+        }
+      #+END_SRC
+
