@@ -1,13 +1,25 @@
+# -*- coding:utf-8 -*-
+#+LANGUAGE:  zh
+#+TITLE:     logstash elasticsearch kibana 日志分析系统 docker 镜像构建
+#+AUTHOR:    纪秀峰
+#+EMAIL:     jixiuf@gmail.com
+#+DATE:     2016-05-09 一
+#+KEYWORDS: logstash elasticsearch kibana
+#+TAGS:  logstash+elasticsearch+kibana
+#+FILETAGS:logstash+elasticsearch+kibana
 #+OPTIONS:   H:2 num:nil toc:t \n:t @:t ::t |:t ^:nil -:t f:t *:t <:t
-* logstash elasticsearch kibana 日志分析系统 docker 镜像构建
+#+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil
+
 ** 本库地址 https://github.com/jixiuf/logstashdocker
 ** 官方docker 镜像
    https://hub.docker.com/_/logstash/
-   docker pull logstash
    https://hub.docker.com/_/kibana/
-   docker pull kibana
    https://hub.docker.com/_/elasticsearch/
-   docker pull elasticsearch
+   #+BEGIN_SRC sh
+     docker pull logstash
+     docker pull kibana
+     docker pull elasticsearch
+   #+END_SRC
 
 **  生成 包含 logstash elasticsearch kibana 的 docker 镜像
    直接本目录下
@@ -781,3 +793,15 @@
     一些配置 在这两个文件里
     /usr/lib/systemd/system/elasticsearch.service
     /usr/lib/sysctl.d/elasticsearch.conf
+
+* kibana
+  数据的可视化， 主要功能 从 elasticsearch 中查询数据， 将数据以图表的形式展示
+
+** kibana 加认证功能。
+  默认情况下kibana 没有任何认证，如果需要放到外网访问， 很不安全。
+  elasticsearch 官网有个插件 shield 可以实现认证及权限控制等功能。
+  但是需要付费，
+  目前我只需要一个简单认证就可以。
+  可以使用nginx来挡。
+  可以参考 http://jixiuf.github.io/blog/nginx拾遗/
+
